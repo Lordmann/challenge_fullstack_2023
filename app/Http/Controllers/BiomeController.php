@@ -65,7 +65,11 @@ class BiomeController extends Controller
             ->orderBy('samples_count', 'desc')
             ->limit(10)->get();
 
+        $response = [];
         foreach($organisms as $organism){
+            $responseOrganism = $organism->only(['genus', 'species', 'samples_count']);
+
+            //Get 3 most common crops per organism
             $crops = [];
             foreach($organism->samples as $sample){
                 $cropId = $sample->crop->id;
@@ -75,10 +79,12 @@ class BiomeController extends Controller
                 }
                 $crops[$cropId]['count']++;
             }
-            $organism->common_crops = collect($crops)->sortByDesc('count')->chunk(3)[0];
+            $responseOrganism['common_crops'] = collect($crops)->sortByDesc('count')->chunk(3)[0]->pluck('name');
+
+            $response[] = $responseOrganism;
         }
 
-        return $organisms;
+        return $response;
     }
 
 }
