@@ -15,8 +15,7 @@
                 <tr v-for="sample of samples" :key="sample.code">
                     <td>{{ sample.code }}</td>
                     <td>{{ sample.abundances_count }}</td>
-                    <!-- TODO: /api/samples does not provide crop -->
-                    <td></td>
+                    <td>{{ sample.crop }}</td>
                 </tr>
             </tbody>
         </table>
@@ -43,6 +42,7 @@ import axios from 'axios';
 type SampleT = {
     code: string;
     abundances_count: number;
+    crop: string;
 }
 
 /**
@@ -51,7 +51,7 @@ type SampleT = {
 @Component({})
 export default class SamplesVue extends Vue {
 
-    // The list of samples that we receive from the server 
+    // The list of samples that we receive from the server
     samples: SampleT[] = [];
 
     mounted(){

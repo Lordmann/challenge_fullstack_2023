@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker exec -it biomemakers_challenge bash
+docker exec -it biomemakers_challenge sh

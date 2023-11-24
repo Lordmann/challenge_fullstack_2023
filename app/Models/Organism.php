@@ -13,4 +13,15 @@ use Illuminate\Database\Eloquent\Model;
 class Organism extends Model
 {
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var string[]
+     */
+    protected $fillable = ['genus', 'species'];
+
+    public function samples(){
+        return $this->belongsToMany(Sample::class, 'abundances');
+    }
 }

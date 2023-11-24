@@ -20,7 +20,10 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     gnupg \
     gnupg2 \
-    gnupg1
+    gnupg1 \
+    npm
+
+CMD ["npm ci"]
 
 #
 # PHP Extensions

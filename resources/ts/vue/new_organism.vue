@@ -1,6 +1,6 @@
 <template>
 
-   
+
    <div>
         <h2> Add New Organism </h2>
 
@@ -21,6 +21,11 @@
             </fieldset>
 
             <p>{{ msg }}</p>
+            <ul v-if="errors.length">
+                <li v-for="err in errors">
+                    {{ err }}
+                </li>
+            </ul>
 
             <button
                 class="pure-button pure-button-primary pure-input-1"
@@ -51,11 +56,36 @@ import axios from 'axios';
 @Component({})
 export default class NewOrganismVue extends Vue {
 
-    genus = ''
-    species = '';
-    msg = 'Status';
+    genus: string = ''
+    species: string = '';
+    msg: string = '';
+    errors: string[] = [];
+
+    validate(){
+        let validationSuccess = true;
+
+        if(!this.genus){
+            validationSuccess = false;
+            this.errors.push("The genus field is required.");
+        }
+
+        if(!this.species){
+            validationSuccess = false;
+            this.errors.push("The species field is required.");
+        }
+
+        return validationSuccess;
+    }
 
     async onClick(){
+
+        this.msg = '';
+        this.errors = [];
+
+        if(!this.validate()){
+            this.msg = 'Errors:';
+            return false;
+        }
 
         const data = {
             genus: this.genus,
@@ -67,13 +97,15 @@ export default class NewOrganismVue extends Vue {
         try {
             const response = await axios.post('/api/organisms/', data);
             this.msg = 'Success';
-        } catch (e){
-            if (axios.isAxiosError(e) && e.response) {
-                this.msg = e.response.data.error;
+        } catch (e:any){
+            if (e.response.status === 422) {
+                this.msg = 'Errors:';
+                for (const [key, error] of Object.entries(e.response.data.errors)) {
+                    this.errors = this.errors.concat(error);
+                }
             } else {
-                this.msg = 'Other error'
+                this.msg = 'Unexpected error.'
             }
-
         }
 
 

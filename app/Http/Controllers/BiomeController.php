@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\NewOrganismRequest;
 use App\Models\Organism;
 use App\Models\Sample;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,49 +17,68 @@ class BiomeController extends Controller
     /**
      * Returns a list of samples
      */
-    public function listSamples(){
-
-        return Sample::query()
+    public function listSamples()
+    {
+        $samples = Sample::query()
+            ->with('crop:id,name')
             ->withCount('abundances')
             ->get();
+
+        $response = [];
+        foreach ($samples as $sample) {
+            $s = $sample->only(['code', 'abundances_count']);
+            $s['crop'] = $sample['crop']['name'];
+            $response[] = $s;
+        }
+
+        return $response;
     }
 
     /**
      * Creates a new organism
      */
-    public function newOrganism(Request $request){
-
-        // Log is configured to print to stderr
-        Log::info($request->all());
-
-        //
-        // TODO: Complete this method to create a new Organism instance
-        //
-
-        return response()->json(['error' => 'Not completed'], 400);
+    public function newOrganism(NewOrganismRequest $request)
+    {
+        try{
+            Organism::create($request->only(['genus','species']));
+        }catch(\Exception $ex){
+            return response()->json([],500);
+        }
+        return response()->json();
     }
 
     /**
-     * Returns a paginated list of organisms 
+     * Returns a paginated list of organisms
      */
-    public function listOrganisms(){
-        return Organism::paginate(10);
+    public function listOrganisms()
+    {
+        return Organism::withCount('samples')->paginate(10);
     }
 
     /**
      * Returns the top list of organisms
      */
-    public function listOrganismsTop10(){
+    public function listOrganismsTop10()
+    {
+        $organisms = Organism::with('samples.crop')
+            ->withCount('samples')
+            ->orderBy('samples_count', 'desc')
+            ->limit(10)->get();
 
-        //
-        // TODO: Return the top 10 organisms
-        //
-        // Could be done with plain sql or better using laravel models
+        foreach($organisms as $organism){
+            $crops = [];
+            foreach($organism->samples as $sample){
+                $cropId = $sample->crop->id;
+                if(!isset($crops[$cropId])){
+                    $crops[$cropId] = $sample->crop->toArray();
+                    $crops[$cropId]['count'] = 0;
+                }
+                $crops[$cropId]['count']++;
+            }
+            $organism->common_crops = collect($crops)->sortByDesc('count')->chunk(3)[0];
+        }
 
-        return DB::select("
-            select * from organisms
-        ");
-        
+        return $organisms;
     }
 
 }
